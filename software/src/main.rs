@@ -7,6 +7,9 @@ use esp_println::println;
 
 extern crate uom;
 
+pub mod command;
+pub mod robot;
+
 #[entry]
 fn main() -> ! {
     let peripherals = Peripherals::take();
@@ -19,7 +22,9 @@ fn main() -> ! {
     esp_println::logger::init_logger_from_env();
     log::info!("Logger is setup");
 
+    let mut scheduler = command::command_scheduler::CommandScheduler{disabled: false, ..Default::default()};
     loop {
+        scheduler.run();
         println!("Loop...");
         delay.delay_ms(500u32);
     }
