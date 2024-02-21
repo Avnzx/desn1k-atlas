@@ -1,0 +1,20 @@
+(kicad_sch (version 20230121) (generator eeschema)
+
+  (uuid 7755f10b-df0c-4791-8a2a-175bb9d34da3)
+
+  (paper "A4")
+
+  (title_block
+    (title "DESN1000 ELECTRICAL LAYOUT")
+    (rev "v0.1")
+    (company "Team 2")
+  )
+
+  (lib_symbols
+  )
+
+
+  (sheet_instances
+    (path "/" (page "1"))
+  )
+)
