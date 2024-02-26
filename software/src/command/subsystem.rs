@@ -1,3 +1,3 @@
 pub trait Subsystem {
-  fn periodic(&self) {}
+    fn periodic(&self) {}
 }
