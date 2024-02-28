@@ -3,7 +3,6 @@
 
 use esp32_hal::{clock::ClockControl, peripherals::Peripherals, prelude::*, Delay};
 use esp_backtrace as _;
-use esp_println::println;
 
 extern crate uom;
 
@@ -28,7 +27,6 @@ fn main() -> ! {
     };
     loop {
         scheduler.run();
-        println!("Loop...");
         delay.delay_ms(500u32);
     }
 }

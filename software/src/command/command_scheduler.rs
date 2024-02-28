@@ -16,6 +16,7 @@ pub struct CommandScheduler {
 }
 
 impl CommandScheduler {
+      // TODO:
     pub fn run(&mut self) {
         if self.disabled {
             return;
@@ -68,5 +69,7 @@ impl CommandScheduler {
     pub fn schedule(&mut self, command: &'static dyn Command) {
         self.to_schedule.push(command)
     }
+
+    // TODO:
     pub fn cancel(&mut self) {}
 }
