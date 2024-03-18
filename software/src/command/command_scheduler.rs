@@ -26,6 +26,10 @@ impl CommandScheduler {
             subsystem.0.periodic()
         }
 
+        // Run commands
+
+        // Execute End, Initialize
+
         // Poll button loops
     }
 
