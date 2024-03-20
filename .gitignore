@@ -12,3 +12,5 @@ software/target/
 electrical/*-backups
 electrical/*.bak
 **/*.kicad_prl
+
+mechanical/**/OldVersions
