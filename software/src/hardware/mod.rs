@@ -1,1 +1,1 @@
-pub mod switch_pro_controller;
+pub mod switch_controller;

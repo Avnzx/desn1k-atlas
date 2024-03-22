@@ -1,11 +1,18 @@
 extern crate uom;
 
-use evdev::EvdevEnum;
-use evdev::{AbsoluteAxisType, Device};
+use std::time::{Duration, Instant};
+
+use command::command_switch_controller::CommandSwitchController;
+use embedded_hal::delay::DelayNs;
+use rppal::hal::Delay;
 
 pub mod command;
 pub mod hardware;
 pub mod robot;
+pub mod util;
+
+// Run at 10ms intervals, AKA 100Hz
+const LOOP_TIME: Duration = Duration::from_millis(10);
 
 fn main() {
     let mut scheduler = command::command_scheduler::CommandScheduler {
@@ -13,23 +20,17 @@ fn main() {
         ..Default::default()
     };
 
-    let device = Device::open("/dev/input/event0").expect("js0 Not found!");
+    let mut delay = Delay::new();
+    let mut controller = CommandSwitchController::default();
 
-    // TODO: Ensure a 20ms loop time...
+    // Main loop, where everything happens
     loop {
+        let loop_start = Instant::now();
+
+        let _ = controller.raw.update();
         scheduler.run();
 
-        println!("axes {:#?}", device.supported_absolute_axes());
-        println!("buttons {:#?}", device.supported_keys());
-        println!("switches {:#?}", device.supported_switches());
-
-        println!(
-            "{:#?}",
-            device.get_abs_state().unwrap()[AbsoluteAxisType::ABS_RZ.to_index()]
-        );
+        // Loop time - time it took for this iter = time to wait until next iter
+        delay.delay_us((LOOP_TIME - (Instant::now() - loop_start)).subsec_micros());
     }
 }
-
-// let ev = stream.next_event();
-// let input =  ev.await.unwrap();
-// println!("Button {:?} value {}", input.kind(), input.value());
