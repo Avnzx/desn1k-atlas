@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use arrayvec::ArrayVec;
 
 use super::{command::Command, subsystem::Subsystem};
@@ -10,16 +8,16 @@ const MAX_SCHEDULER_QUEUE: usize = 3;
 
 // Command scheduler
 #[derive(Default)]
-pub struct CommandScheduler {
+pub struct CommandScheduler<'a> {
     pub disabled: bool,
     pub subsystems:
-        ArrayVec<(&'static dyn Subsystem, Option<&'static dyn Command>), MAX_SUBSYSTEM_COUNT>,
+        ArrayVec<(&'a dyn Subsystem, Option<&'static dyn Command>), MAX_SUBSYSTEM_COUNT>,
     pub running_commands: ArrayVec<&'static dyn Command, MAX_RUNNING_COMMANDS>,
 
     pub to_schedule: ArrayVec<&'static dyn Command, MAX_SCHEDULER_QUEUE>,
 }
 
-impl CommandScheduler {
+impl<'a> CommandScheduler<'a> {
     /// Run subsystems
     /// Run scheduled commands
     /// Drop & End finished commands
@@ -61,25 +59,30 @@ impl CommandScheduler {
         }
         self.to_schedule.clear();
 
-        // TODO: redo this, it's dumb: Schedules default commands
         // We can't have subsystem overlaps, and "loose" commands (without reqs) won't be added to this
-        let mut reqs = HashSet::<*const dyn Subsystem>::with_capacity(MAX_SUBSYSTEM_COUNT);
+        let mut reqs = ArrayVec::<&dyn Subsystem, MAX_SUBSYSTEM_COUNT>::new_const();
         for cmd in &self.running_commands {
             for req in cmd.get_requirements() {
-                reqs.insert(*req);
+                reqs.try_push(*req)
+                    .expect("More required subsystems than subsystem count! Contact Upstream!");
             }
         }
-        self.subsystems.iter().for_each(|sub| {
-            if (!reqs.contains(&core::ptr::addr_of!(*sub.0))) && sub.1.is_some() {
-                self.running_commands.push(sub.1.unwrap());
-                sub.1.unwrap().initialize();
+
+        for subsystem in reqs {
+            if let Some((_, Some(cmd))) = self
+                .subsystems
+                .iter()
+                .find(|sspair| core::ptr::addr_eq(sspair.0, subsystem))
+            {
+                self.running_commands.push(*cmd);
+                cmd.initialize();
             }
-        });
-        // END Schedule default command
+        }
     }
 
-    pub fn register_subsystem(&mut self, subsystem: &'static dyn Subsystem) {
-        self.subsystems.push((subsystem, None))
+    pub fn register_subsystem(&mut self, subsystem: &'a dyn Subsystem) -> &mut Self {
+        self.subsystems.push((subsystem, None));
+        self
     }
 
     pub fn unregister_subsystem(&mut self, subsystem: &'static dyn Subsystem) {

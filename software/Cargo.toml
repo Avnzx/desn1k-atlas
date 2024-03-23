@@ -12,3 +12,4 @@ evdev = {version = "0.12.1"}
 mpu6050-dmp = "0.4.0"
 embedded-hal = "1.0.0"
 arrayvec = "0.7.4"
+mavlink = "0.12.2"
