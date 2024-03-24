@@ -19,14 +19,16 @@ const LOOP_TIME: Duration = Duration::from_millis(10);
 
 fn main() {
     let mut controller = CommandSwitchController::new(None);
-    let mut scheduler = command::command_scheduler::CommandScheduler {
-        disabled: false,
-        ..Default::default()
-    };
 
     // Create Subsystems
     let drive_subsystem = DriveSubsystem::new();
     let claw_subsystem = ClawSubsystem::new();
+
+    let mut scheduler = command::command_scheduler::CommandScheduler {
+        disabled: false,
+        ..Default::default()
+    };
+    
     scheduler
         .register_subsystem(&drive_subsystem)
         .register_subsystem(&claw_subsystem);
@@ -37,6 +39,7 @@ fn main() {
 
         let _ = controller.update(&mut scheduler);
         scheduler.run();
+    
 
         // Loop time - time it took for this iter = time to wait until next iter
         thread::sleep(LOOP_TIME - (Instant::now() - loop_start));

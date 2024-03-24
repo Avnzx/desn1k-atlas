@@ -67,6 +67,14 @@ EOF
 
 tar -c -C "$tmp" etc | gzip -9n > /tmp/alpine/build/openssh.apkovl.tar.gz
 
+
+
+# Enable hardware PWM on both PWM0 and PWM1
+makefile root:root 0555 /tmp/alpine/build/usercfg.txt <<EOF
+dtoverlay=pwm-2chan
+EOF
+
 # Rearchive it all
 tar -C /tmp/alpine/build -cpf /tmp/alpine/new_alpine.tar --preserve-permissions --atime-preserve --same-owner .
 gzip -9 /tmp/alpine/new_alpine.tar
+echo "[DONE] Created image /tmp/alpine/new_alpine.tar.gz, follow https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device"
