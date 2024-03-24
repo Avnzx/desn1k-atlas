@@ -1,0 +1,5 @@
+[target.arm-unknown-linux-musleabihf]
+linker = "lld"
+
+[build]
+target = "arm-unknown-linux-musleabihf"
