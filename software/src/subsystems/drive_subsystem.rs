@@ -29,55 +29,55 @@ impl DriveSubsystem {
         }
     }
 
-    // Drive, NWU
-    // pub fn drive(&mut self, pitch: f32, roll: f32, updown: f32) {
-    //   let mut left = 0.0;
-    //   let mut right = 0.0;
-    //   let mut tail = 0.0;
+    // Drive, ENU coordinate system
+    pub fn drive(&mut self, pitch: f32, roll: f32, updown: f32) {
+      let mut left = 0.0;
+      let mut right = 0.0;
+      let mut tail = 0.0;
 
-    //   let pitch = pitch.clamp(-1.0, 1.0);
-    //   left -= pitch;
-    //   right -= pitch;
-    //   tail += pitch;
+      let pitch = pitch.clamp(-1.0, 1.0);
+      left += pitch;
+      right += pitch;
+      tail -= pitch;
 
-    //   let roll = roll.clamp(-1.0, 1.0);
-    //   left += roll;
-    //   right -= roll;
+      let roll = roll.clamp(-1.0, 1.0);
+      left += roll;
+      right -= roll;
 
-    //   let updown = updown.clamp(-1.0, 1.0);
-    //   left += updown;
-    //   right += updown;
-    //   tail += updown;
-
-
-    //   // Normalize speeds
-    //   let minimum = f32::min(f32::min(left,right),tail);
-    //   left += f32::abs(minimum); right += f32::abs(minimum); tail += f32::abs(minimum); // shift all to +ve
+      let updown = updown.clamp(-1.0, 1.0);
+      left += updown;
+      right += updown;
+      tail += updown;
 
 
-    //   let maximum = f32::max(f32::max(left,right),tail);
-    //   left = left / maximum;
-    //   right = right / maximum;
-    //   tail = tail / maximum;
-
-    //   if maximum == 0.0 {
-    //       left = 0.0; right = 0.0; tail = 0.0;
-    //   }
-
-    //   println!("raw tail: {}, r: {}, l: {}", tail, right, left);
+      // Normalize speeds
+      let minimum = f32::min(f32::min(left,right),tail);
+      left += f32::abs(minimum); right += f32::abs(minimum); tail += f32::abs(minimum); // shift all to +ve
 
 
-    //   let left_duty = 0.5 + 0.5 * left.clamp(0.0, 1.0);
-    //   let right_duty = 0.5 + 0.5 * right.clamp(0.0, 1.0);
-    //   let tail_duty = 0.5 + 0.5 * tail.clamp(0.0, 1.0);
+      let maximum = f32::max(f32::max(left,right),tail);
+      left = left / maximum;
+      right = right / maximum;
+      tail = tail / maximum;
 
-    //   println!("tail: {}, r: {}, l: {}", tail_duty, right_duty, left_duty);
+      if maximum == 0.0 {
+          left = 0.0; right = 0.0; tail = 0.0;
+      }
 
-    //   self.left.set_duty_cycle(left_duty.into()).unwrap();
-    //   self.right.set_duty_cycle(right_duty.into()).unwrap();
+      println!("raw tail: {}, r: {}, l: {}", tail, right, left);
 
-    //   let pulse = Duration::from_secs_f64((0.01 * tail_duty).into());
-    //   self.tail.set_pwm(Duration::from_millis(10), pulse).unwrap();    }
+
+      let left_duty = 0.5 + 0.5 * left.clamp(0.0, 1.0);
+      let right_duty = 0.5 + 0.5 * right.clamp(0.0, 1.0);
+      let tail_duty = 0.5 + 0.5 * tail.clamp(0.0, 1.0);
+
+      println!("tail: {}, r: {}, l: {}", tail_duty, right_duty, left_duty);
+
+      self.left.set_duty_cycle(left_duty.into()).unwrap();
+      self.right.set_duty_cycle(right_duty.into()).unwrap();
+
+      let pulse = Duration::from_secs_f64((0.01 * tail_duty).into());
+      self.tail.set_pwm(Duration::from_millis(10), pulse).unwrap();    }
 
     pub fn drive_tail_normal(&mut self, tail: f32, front: f32) {
       self.left.set_duty_cycle(Self::throttle_to_duty(front).into()).unwrap();

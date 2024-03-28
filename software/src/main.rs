@@ -6,6 +6,7 @@ use std::{
 };
 
 use command::command_switch_controller::CommandSwitchController;
+use hardware::switch_controller::SwitchController;
 use subsystems::{claw_subsystem::ClawSubsystem, drive_subsystem::DriveSubsystem};
 
 pub mod command;
@@ -18,32 +19,20 @@ pub mod util;
 const LOOP_TIME: Duration = Duration::from_millis(20);
 
 fn main() {
-    let mut controller = CommandSwitchController::new(None);
+    let mut controller = SwitchController::default();
 
     // Create Subsystems
     let mut drive_subsystem = DriveSubsystem::new();
     let claw_subsystem = ClawSubsystem::new();
 
-    let mut scheduler = command::command_scheduler::CommandScheduler {
-        disabled: false,
-        ..Default::default()
-    };
-
-
-    
-    scheduler
-        // .register_subsystem(&drive_subsystem)
-        .register_subsystem(&claw_subsystem);
-
     // Main loop, where everything happens
     loop {
         let loop_start = Instant::now();
-        // scheduler.run(); // SPWM hates this one trick
+        let _ = controller.update();
 
-        let _ = controller.update(&mut scheduler);
-
-        // drive_subsystem.drive_all_motors(-controller.raw.get_left_y());
-        drive_subsystem.drive_tail_normal(-controller.raw.get_left_y(), -controller.raw.get_right_y());
+        // Pushing the stick forward pitches down
+        drive_subsystem.drive(controller.get_left_y(), controller.get_left_x(), -controller.get_right_y());
+        // drive_subsystem.drive_tail_normal(-controller.get_left_y(), -controller.get_right_y());
 
         // Loop time - time it took for this iter = time to wait until next iter
         thread::sleep(LOOP_TIME.saturating_sub(Instant::now().duration_since(loop_start)));
