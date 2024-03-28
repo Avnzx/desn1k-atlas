@@ -71,17 +71,9 @@ impl DriveSubsystem {
 
         println!("raw tail: {}, r: {}, l: {}", tail, right, left);
 
-        let left_duty = 0.5 + 0.5 * left.clamp(0.0, 1.0);
-        let right_duty = 0.5 + 0.5 * right.clamp(0.0, 1.0);
-        let tail_duty = 0.5 + 0.5 * tail.clamp(0.0, 1.0);
-
-        println!("tail: {}, r: {}, l: {}", tail_duty, right_duty, left_duty);
-
-        self.left.set_duty_cycle(left_duty.into()).unwrap();
-        self.right.set_duty_cycle(right_duty.into()).unwrap();
-
-        let pulse = Duration::from_secs_f64((0.01 * tail_duty).into());
-        self.tail.set_pwm(Duration::from_millis(10), pulse).unwrap();
+        self.left.set_duty_cycle(Self::throttle_to_duty(left).into()).unwrap();
+        self.right.set_duty_cycle(Self::throttle_to_duty(right).into()).unwrap();
+        self.tail.set_pwm(PWMPERIOD, Self::throttle_to_pulse(PWMPERIOD, tail)).unwrap();
     }
 
     pub fn drive_tail_normal(&mut self, tail: f32, front: f32) {
