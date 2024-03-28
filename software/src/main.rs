@@ -1,37 +1,49 @@
-#![no_std]
-#![no_main]
-
-use esp32_hal::{clock::ClockControl, peripherals::Peripherals, prelude::*, timer::TimerGroup, Delay};
-use esp_backtrace as _;
-
 extern crate uom;
 
+use std::{
+    thread::{self},
+    time::{Duration, Instant},
+};
+
+use hardware::switch_controller::SwitchController;
+use subsystems::{claw_subsystem::ClawSubsystem, drive_subsystem::DriveSubsystem};
+
 pub mod command;
+pub mod hardware;
 pub mod robot;
+pub mod subsystems;
+pub mod util;
 
-#[entry]
-fn main() -> ! {
-    let peripherals = Peripherals::take();
-    let system = peripherals.SYSTEM.split();
+// Run at 20ms intervals, AKA 50Hz
+const LOOP_TIME: Duration = Duration::from_millis(20);
 
-    let clocks = ClockControl::max(system.clock_control).freeze();
-    let mut delay = Delay::new(&clocks);
+fn main() {
+    let mut controller = SwitchController::default();
 
-    // let mut timg0 = TimerGroup::new(peripherals.TIMG0, &clocks);
-    // timg0.timer0.reset_counter();
-    
-    // setup logger
-    esp_println::logger::init_logger_from_env();
-    log::info!("Logger is setup");
+    // Create Subsystems
+    let mut drive_subsystem = DriveSubsystem::new();
+    let claw_subsystem = ClawSubsystem::new();
 
-    let mut scheduler = command::command_scheduler::CommandScheduler {
-        disabled: false,
-        ..Default::default()
-    };
-
-    // TODO: Ensure a 20ms loop time... how?
+    // Main loop, where everything happens
     loop {
-        scheduler.run();
-        delay.delay_ms(500u32);
+        let loop_start = Instant::now();
+        let _ = controller.update();
+
+        // Pushing the stick forward pitches down
+        drive_subsystem.drive(
+            controller.get_left_y(),
+            controller.get_left_x(),
+            -controller.get_right_y(),
+        );
+        // OLD: drive_subsystem.drive_tail_normal(-controller.get_left_y(), -controller.get_right_y());
+
+        // Claw subsystem
+        if controller.get_pov(180) { // TODO: Drop object / Open claw
+        } else if controller.get_pov(90) { // TODO: Horizontal pickup
+        } else if controller.get_pov(270) { // TODO: Vertical Pickup
+        }
+
+        // Loop time - time it took for this iter = time to wait until next iter
+        thread::sleep(LOOP_TIME.saturating_sub(Instant::now().duration_since(loop_start)));
     }
 }

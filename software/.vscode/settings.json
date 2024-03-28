@@ -1,4 +1,3 @@
 {
-    "rust-analyzer.check.allTargets": false,
-    "rust-analyzer.showUnlinkedFileNotification": false,
+  "rust-analyzer.cargo.target": "arm-unknown-linux-musleabihf"
 }

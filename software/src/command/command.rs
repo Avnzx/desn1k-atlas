@@ -10,3 +10,19 @@ pub trait Command {
     // necessary for scheduling
     fn get_requirements(&self) -> &[&'static dyn Subsystem];
 }
+
+impl dyn Command {
+    pub fn is_disjoint(&self, other: &dyn Command) -> bool {
+        !self
+            .get_requirements()
+            .iter()
+            .find(|req| {
+                other
+                    .get_requirements()
+                    .iter()
+                    .find(|oth| core::ptr::addr_eq(**req, **oth))
+                    .is_some()
+            })
+            .is_some()
+    }
+}
