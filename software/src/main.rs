@@ -5,7 +5,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use command::command_switch_controller::CommandSwitchController;
 use hardware::switch_controller::SwitchController;
 use subsystems::{claw_subsystem::ClawSubsystem, drive_subsystem::DriveSubsystem};
 
@@ -31,8 +30,18 @@ fn main() {
         let _ = controller.update();
 
         // Pushing the stick forward pitches down
-        drive_subsystem.drive(controller.get_left_y(), controller.get_left_x(), -controller.get_right_y());
-        // drive_subsystem.drive_tail_normal(-controller.get_left_y(), -controller.get_right_y());
+        drive_subsystem.drive(
+            controller.get_left_y(),
+            controller.get_left_x(),
+            -controller.get_right_y(),
+        );
+        // OLD: drive_subsystem.drive_tail_normal(-controller.get_left_y(), -controller.get_right_y());
+
+        // Claw subsystem
+        if controller.get_pov(180) { // TODO: Drop object / Open claw
+        } else if controller.get_pov(90) { // TODO: Horizontal pickup
+        } else if controller.get_pov(270) { // TODO: Vertical Pickup
+        }
 
         // Loop time - time it took for this iter = time to wait until next iter
         thread::sleep(LOOP_TIME.saturating_sub(Instant::now().duration_since(loop_start)));
