@@ -22,7 +22,7 @@ fn main() {
 
     // Create Subsystems
     let mut drive_subsystem = DriveSubsystem::new();
-    let claw_subsystem = ClawSubsystem::new();
+    // let claw_subsystem = ClawSubsystem::new();
 
     // Main loop, where everything happens
     loop {
@@ -30,9 +30,13 @@ fn main() {
         let _ = controller.update();
 
         // Pushing the stick forward pitches down
-        drive_subsystem.drive(
-            controller.get_left_y(),
-            controller.get_left_x(),
+        // drive_subsystem.drive(
+        //     controller.get_left_y(),
+        //     controller.get_left_x(),
+        //     -controller.get_right_y(),
+        // );
+        drive_subsystem.drive_tail_normal(
+            -controller.get_left_y(),
             -controller.get_right_y(),
         );
         // OLD: drive_subsystem.drive_tail_normal(-controller.get_left_y(), -controller.get_right_y());

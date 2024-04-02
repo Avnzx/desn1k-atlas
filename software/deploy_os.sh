@@ -2,17 +2,6 @@
 set -e
 set -o pipefail
 
-makefile() {
-	OWNER="$1"
-	PERMS="$2"
-	FILENAME="$3"
-	cat > "$FILENAME"
-	chown "$OWNER" "$FILENAME"
-	chmod "$PERMS" "$FILENAME"
-}
-
-
-
 # Actual script begins here
 
 if [ "$(whoami)" != "root" ]; then
@@ -20,61 +9,45 @@ if [ "$(whoami)" != "root" ]; then
     exit
 fi
 
-
-# DL alpine Rpi image
-echo "[INFO]: Downloading alpine image"
-if [ -a "/tmp/alpine/alpine.tar.gz" ]; then
-  echo "[WARN]: Skipping alpine download since file already exists"
-else
-  mkdir -p /tmp/alpine
-  wget "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/armhf/$(wget https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/armhf/latest-releases.yaml -qO - | yq ".[0].file" -r)" -O /tmp/alpine/alpine.tar.gz
+if [ -z "$1" ]; then 
+  echo "[ERR] No device specified for flashing! Please provide a device, e.g. /dev/sda"
+  exit
 fi
 
-echo "[INFO]: Extracting alpine..."
-mkdir -p /tmp/alpine/build
-tar -p -s --atime-preserve --same-owner --one-top-level=/tmp/alpine/build -zxf /tmp/alpine/alpine.tar.gz
-
-# So we can ssh in (overlay)
-echo "[INFO]: Downloading headless overlay"
-if [ -a "/tmp/alpine/build/headless.apkovl.tar.gz" ]; then
-  echo "[WARN]: Skipping download since file already exists"
-else
-  wget "https://is.gd/apkovl_master" -qO /tmp/alpine/build/headless.apkovl.tar.gz
+if [ ! -e "/tmp/alpine/new_alpine.tar.gz" ]; then
+  echo "[ERR]: Artifacts not found! Please run make_os.sh before this script!"
+  exit
 fi
-# TODO: deploy credentials
 
+# Actual script begins here
 
-# install scp
-echo "[INFO]: Creating scp (install openssh) overlay"
-
-tmp="$(mktemp -d)"
-mkdir -p "$tmp"/etc/etc/init.d && mkdir -p "$tmp"/etc/runlevels/default
-
-makefile root:root 0755 "$tmp"/etc/etc/init.d/scp_bootstrap <<EOF
-#!/sbin/openrc-run
-
-description="SCP Bootstrapping script"
-name="SCP Bootstrap"
-
-command="apk add openssh"
-command_background=true
-pidfile="/run/\${RC_SVCNAME}.pid"
+echo "[INFO] Repartitioning Device: $1"
+fdisk -w always $1 <<EOF
+  o
+  n
+  p
+  1
+  2048
+  -0
+  t
+  0c
+  a
+  w
 EOF
 
-makefile root:root 0755 "$tmp"/etc/runlevels/default/scp_bootstrap <<EOF
-../../init.d/scp_bootstrap
-EOF
+partition="${1}1"
 
-tar -c -C "$tmp" etc | gzip -9n > /tmp/alpine/build/openssh.apkovl.tar.gz
+echo "[INFO] Making Fat32 Filesystem on $partition"
+mkdosfs -F32 $partition
 
+echo "[INFO] Mounting $partition to /media/alpine"
+mkdir -p /media/alpine
+mount -t vfat $partition /media/alpine
 
+echo "[INFO] Copying files to $partition"
+sudo tar -p -s --atime-preserve --no-same-owner --one-top-level=/run/media/avnzx/disk -zxvf /tmp/alpine/new_alpine.tar.gz
 
-# Enable hardware PWM on both PWM0 and PWM1
-makefile root:root 0555 /tmp/alpine/build/usercfg.txt <<EOF
-dtoverlay=pwm-2chan
-EOF
+echo "[INFO] Unmounting $partition"
+umount $partition
 
-# Rearchive it all
-tar -C /tmp/alpine/build -cpf /tmp/alpine/new_alpine.tar --preserve-permissions --atime-preserve --same-owner .
-gzip -9 /tmp/alpine/new_alpine.tar
-echo "[DONE] Created image /tmp/alpine/new_alpine.tar.gz, follow https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device"
+echo "[DONE] Successfully flashed OS!"
