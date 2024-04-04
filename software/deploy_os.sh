@@ -45,7 +45,7 @@ mkdir -p /media/alpine
 mount -t vfat $partition /media/alpine
 
 echo "[INFO] Copying files to $partition"
-sudo tar -p -s --atime-preserve --no-same-owner --one-top-level=/run/media/avnzx/disk -zxvf /tmp/alpine/new_alpine.tar.gz
+sudo tar -p -s --atime-preserve --no-same-owner --one-top-level=/media/alpine -zxvf /tmp/alpine/new_alpine.tar.gz
 
 echo "[INFO] Unmounting $partition"
 umount $partition
