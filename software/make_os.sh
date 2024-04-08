@@ -45,8 +45,8 @@ fi
 # TODO: Deploy credentials
 makefile root:root 0555 /tmp/alpine/build/wpa_supplicant.conf <<EOF
 network={
-  ssid="YOUR_WIFI_NAME_HERE"
-  psk="YOUR_WIFI_PASSWORD_HERE"
+  ssid="TEST_2451"
+  psk="40841320682011562111"
 }
 EOF
 

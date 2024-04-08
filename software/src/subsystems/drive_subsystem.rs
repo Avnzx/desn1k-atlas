@@ -10,8 +10,7 @@ use crate::command::subsystem::Subsystem;
 // BCM numbering https://pinout.xyz/
 const MOTOR_L: Channel = Channel::Pwm0;
 const MOTOR_R: Channel = Channel::Pwm1;
-const MOTOR_T: u8 = 27;
-const SERVO_T: u8 = 17;
+const MOTOR_T: u8 = 17;
 
 const PWMPERIOD: Duration = Duration::from_millis(10);
 
@@ -19,7 +18,6 @@ pub struct DriveSubsystem {
     left: Pwm,
     right: Pwm,
     tail: OutputPin,
-    tailservo: OutputPin,
 }
 
 impl DriveSubsystem {
@@ -28,7 +26,6 @@ impl DriveSubsystem {
             left: Pwm::with_frequency(MOTOR_L, 100.0, 0.5, Polarity::Normal, true).unwrap(),
             right: Pwm::with_frequency(MOTOR_R, 100.0, 0.5, Polarity::Normal, true).unwrap(),
             tail: Gpio::new().unwrap().get(MOTOR_T).unwrap().into_output(),
-            tailservo: Gpio::new().unwrap().get(SERVO_T).unwrap().into_output(),
         }
     }
 
@@ -71,9 +68,15 @@ impl DriveSubsystem {
 
         println!("raw tail: {}, r: {}, l: {}", tail, right, left);
 
-        self.left.set_duty_cycle(Self::throttle_to_duty(left).into()).unwrap();
-        self.right.set_duty_cycle(Self::throttle_to_duty(right).into()).unwrap();
-        self.tail.set_pwm(PWMPERIOD, Self::throttle_to_pulse(PWMPERIOD, tail)).unwrap();
+        self.left
+            .set_duty_cycle(Self::throttle_to_duty(left).into())
+            .unwrap();
+        self.right
+            .set_duty_cycle(Self::throttle_to_duty(right).into())
+            .unwrap();
+        self.tail
+            .set_pwm(PWMPERIOD, Self::throttle_to_pulse(PWMPERIOD, tail))
+            .unwrap();
     }
 
     pub fn drive_tail_normal(&mut self, tail: f32, front: f32) {

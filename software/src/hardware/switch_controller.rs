@@ -148,6 +148,10 @@ impl SwitchController {
     pub fn get_pov(&self, angle: u16) -> bool {
         self.decode_pov() == angle
     }
+
+    pub fn get_current_pov(&self) -> u16 {
+        self.decode_pov()
+    }
 }
 
 enum Buttons {
