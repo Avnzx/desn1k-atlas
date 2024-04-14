@@ -29,41 +29,33 @@ impl DriveSubsystem {
         }
     }
 
-    // Drive, ENU coordinate system
+    // Drive, NWU coordinate system
     pub fn drive(&mut self, pitch: f32, roll: f32, updown: f32) {
         let mut left = 0.0;
         let mut right = 0.0;
         let mut tail = 0.0;
 
         let pitch = pitch.clamp(-1.0, 1.0);
-        left += pitch;
-        right += pitch;
-        tail -= pitch;
+        if pitch.abs() == pitch { tail += pitch } else { right += pitch.abs(); left += pitch.abs() };
 
         let roll = roll.clamp(-1.0, 1.0);
-        left += roll;
-        right -= roll;
+        if roll.abs() == roll { left += roll } else { right += roll.abs() };
 
-        let updown = updown.clamp(-1.0, 1.0);
+        let updown = updown.clamp(0.0, 1.0);
         left += updown;
         right += updown;
         tail += updown;
 
-        // Normalize speeds
-        let minimum = f32::min(f32::min(left, right), tail);
-        left += f32::abs(minimum);
-        right += f32::abs(minimum);
-        tail += f32::abs(minimum); // shift all to +ve
-
+        // Normalize values
         let maximum = f32::max(f32::max(left, right), tail);
-        left = left / maximum;
-        right = right / maximum;
-        tail = tail / maximum;
-
         if maximum == 0.0 {
             left = 0.0;
             right = 0.0;
             tail = 0.0;
+        } else {
+            left = left / maximum;
+            right = right / maximum;
+            tail = tail / maximum;
         }
 
         println!("raw tail: {}, r: {}, l: {}", tail, right, left);

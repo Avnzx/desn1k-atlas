@@ -1,5 +1,5 @@
 [target.arm-unknown-linux-musleabihf]
-linker = "lld"
+linker = "rust-lld"
 
 [build]
 target = "arm-unknown-linux-musleabihf"
